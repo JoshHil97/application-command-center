@@ -184,7 +184,7 @@ export default function TemplatesPage() {
 
         <Card className="xl:col-span-2">
           <div className="mb-4 flex flex-wrap items-end gap-3">
-            <div className="w-52">
+            <div className="w-full sm:w-52">
               <Label>Filter type</Label>
               <Select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
                 <option value="">All</option>
@@ -193,7 +193,7 @@ export default function TemplatesPage() {
                 ))}
               </Select>
             </div>
-            <div className="w-60">
+            <div className="w-full sm:w-60">
               <Label>Filter tags/title</Label>
               <Input value={searchTag} onChange={(event) => setSearchTag(event.target.value)} placeholder="finance, STAR, etc" />
             </div>

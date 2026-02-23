@@ -18,12 +18,17 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Career Command | Job Application CRM",
   description: "Premium job application tracker with timelines, notes, reminders, documents and analytics.",
+  icons: {
+    icon: "/cross.svg",
+    shortcut: "/cross.svg",
+    apple: "/cross.svg",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en-GB">
-      <body className={`${manrope.variable} ${plexMono.variable} pb-12`}>
+      <body className={`${manrope.variable} ${plexMono.variable} pb-14`}>
         <AuthProvider>
           {children}
           <InspirationVerse />

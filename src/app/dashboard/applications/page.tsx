@@ -54,7 +54,7 @@ function StatusQuickForm({ applicationId, currentStatus, onDone }: { application
     <form action={action} className="flex items-end gap-2">
       <TokenField />
       <input type="hidden" name="application_id" value={applicationId} />
-      <div className="w-40">
+      <div className="w-full sm:w-40">
         <Label>Status</Label>
         <Select name="status" defaultValue={currentStatus}>
           {APP_STATUSES.map((status) => (
@@ -414,95 +414,165 @@ export default function ApplicationsPage() {
         ) : applications.length === 0 ? (
           <EmptyState title="No applications found" description="Adjust filters or create a new application." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-stone-200 text-left text-xs uppercase tracking-wide text-stone-500">
-                  <th className="px-2 py-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.length > 0 && selectedIds.length === applications.length}
-                      onChange={(event) => {
-                        const checked = event.target.checked;
-                        const next: Record<string, boolean> = {};
-                        for (const app of applications) {
-                          next[app.id] = checked;
-                        }
-                        setSelected(next);
-                      }}
-                    />
-                  </th>
-                  <th className="px-2 py-2">Company</th>
-                  <th className="px-2 py-2">Role</th>
-                  <th className="px-2 py-2">Status</th>
-                  <th className="px-2 py-2">Priority</th>
-                  <th className="px-2 py-2">Date applied</th>
-                  <th className="px-2 py-2">Next step</th>
-                  <th className="px-2 py-2">Updated</th>
-                  <th className="px-2 py-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {applications.map((app) => {
-                  const expanded = expandedId === app.id;
+          <>
+            <div className="space-y-3 lg:hidden">
+              {applications.map((app) => {
+                const expanded = expandedId === app.id;
 
-                  return (
-                    <Fragment key={app.id}>
-                      <tr className="border-b border-stone-100 align-top">
-                        <td className="px-2 py-3">
-                          <input
-                            type="checkbox"
-                            checked={!!selected[app.id]}
-                            onChange={(event) => toggleSelected(app.id, event.target.checked)}
-                          />
-                        </td>
-                        <td className="px-2 py-3 font-medium text-stone-900">{app.company_name}</td>
-                        <td className="px-2 py-3">
-                          <Link href={`/dashboard/applications/${app.id}`} className="text-stone-700 hover:text-stone-800">
-                            {app.role_title}
-                          </Link>
-                        </td>
-                        <td className="px-2 py-3">
-                          <Badge className={statusClass(app.status)}>{statusLabel(app.status)}</Badge>
-                        </td>
-                        <td className="px-2 py-3">
-                          <Badge className={priorityClass(app.priority)}>{app.priority}</Badge>
-                        </td>
-                        <td className="px-2 py-3 text-stone-700">{formatDate(app.date_applied)}</td>
-                        <td className="px-2 py-3 text-stone-700">{formatDate(app.next_step_date)}</td>
-                        <td className="px-2 py-3 text-stone-700">{formatDate(app.updated_at)}</td>
-                        <td className="px-2 py-3">
-                          <div className="flex items-center gap-2">
-                            <Link href={`/dashboard/applications/${app.id}`}>
-                              <Button size="sm" variant="secondary">View</Button>
-                            </Link>
-                            <Button size="sm" variant="ghost" onClick={() => setExpandedId(expanded ? null : app.id)}>
-                              {expanded ? "Hide" : "Quick actions"}
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
+                return (
+                  <div key={app.id} className="rounded-lg border border-stone-200 bg-white p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <label className="inline-flex items-center gap-2 text-xs text-stone-600">
+                        <input
+                          type="checkbox"
+                          checked={!!selected[app.id]}
+                          onChange={(event) => toggleSelected(app.id, event.target.checked)}
+                        />
+                        Select
+                      </label>
+                      <Badge className={statusClass(app.status)}>{statusLabel(app.status)}</Badge>
+                    </div>
 
-                      {expanded && (
-                        <tr key={`${app.id}-expanded`} className="border-b border-stone-200 bg-stone-50/80">
-                          <td colSpan={9} className="space-y-3 px-2 py-4">
-                            <StatusQuickForm
-                              applicationId={app.id}
-                              currentStatus={app.status}
-                              onDone={loadApplications}
+                    <p className="mt-2 text-sm font-medium text-stone-900">{app.company_name}</p>
+                    <Link href={`/dashboard/applications/${app.id}`} className="mt-1 block text-sm text-stone-700 hover:text-stone-800">
+                      {app.role_title}
+                    </Link>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-stone-600">
+                      <div>
+                        <span className="block font-medium text-stone-700">Priority</span>
+                        <Badge className={`${priorityClass(app.priority)} mt-1`}>{app.priority}</Badge>
+                      </div>
+                      <div>
+                        <span className="block font-medium text-stone-700">Applied</span>
+                        <span className="mt-1 block">{formatDate(app.date_applied)}</span>
+                      </div>
+                      <div>
+                        <span className="block font-medium text-stone-700">Next step</span>
+                        <span className="mt-1 block">{formatDate(app.next_step_date)}</span>
+                      </div>
+                      <div>
+                        <span className="block font-medium text-stone-700">Updated</span>
+                        <span className="mt-1 block">{formatDate(app.updated_at)}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link href={`/dashboard/applications/${app.id}`}>
+                        <Button size="sm" variant="secondary">View</Button>
+                      </Link>
+                      <Button size="sm" variant="ghost" onClick={() => setExpandedId(expanded ? null : app.id)}>
+                        {expanded ? "Hide" : "Quick actions"}
+                      </Button>
+                    </div>
+
+                    {expanded && (
+                      <div className="mt-3 space-y-3 border-t border-stone-200 pt-3">
+                        <StatusQuickForm
+                          applicationId={app.id}
+                          currentStatus={app.status}
+                          onDone={loadApplications}
+                        />
+                        <NextStepQuickForm application={app} onDone={loadApplications} />
+                        <NoteQuickForm applicationId={app.id} onDone={loadApplications} />
+                        <UploadQuickForm application={app} onDone={loadApplications} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="hidden overflow-x-auto lg:block">
+              <table className="min-w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-stone-200 text-left text-xs uppercase tracking-wide text-stone-500">
+                    <th className="px-2 py-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.length > 0 && selectedIds.length === applications.length}
+                        onChange={(event) => {
+                          const checked = event.target.checked;
+                          const next: Record<string, boolean> = {};
+                          for (const app of applications) {
+                            next[app.id] = checked;
+                          }
+                          setSelected(next);
+                        }}
+                      />
+                    </th>
+                    <th className="px-2 py-2">Company</th>
+                    <th className="px-2 py-2">Role</th>
+                    <th className="px-2 py-2">Status</th>
+                    <th className="px-2 py-2">Priority</th>
+                    <th className="px-2 py-2">Date applied</th>
+                    <th className="px-2 py-2">Next step</th>
+                    <th className="px-2 py-2">Updated</th>
+                    <th className="px-2 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {applications.map((app) => {
+                    const expanded = expandedId === app.id;
+
+                    return (
+                      <Fragment key={app.id}>
+                        <tr className="border-b border-stone-100 align-top">
+                          <td className="px-2 py-3">
+                            <input
+                              type="checkbox"
+                              checked={!!selected[app.id]}
+                              onChange={(event) => toggleSelected(app.id, event.target.checked)}
                             />
-                            <NextStepQuickForm application={app} onDone={loadApplications} />
-                            <NoteQuickForm applicationId={app.id} onDone={loadApplications} />
-                            <UploadQuickForm application={app} onDone={loadApplications} />
+                          </td>
+                          <td className="px-2 py-3 font-medium text-stone-900">{app.company_name}</td>
+                          <td className="px-2 py-3">
+                            <Link href={`/dashboard/applications/${app.id}`} className="text-stone-700 hover:text-stone-800">
+                              {app.role_title}
+                            </Link>
+                          </td>
+                          <td className="px-2 py-3">
+                            <Badge className={statusClass(app.status)}>{statusLabel(app.status)}</Badge>
+                          </td>
+                          <td className="px-2 py-3">
+                            <Badge className={priorityClass(app.priority)}>{app.priority}</Badge>
+                          </td>
+                          <td className="px-2 py-3 text-stone-700">{formatDate(app.date_applied)}</td>
+                          <td className="px-2 py-3 text-stone-700">{formatDate(app.next_step_date)}</td>
+                          <td className="px-2 py-3 text-stone-700">{formatDate(app.updated_at)}</td>
+                          <td className="px-2 py-3">
+                            <div className="flex items-center gap-2">
+                              <Link href={`/dashboard/applications/${app.id}`}>
+                                <Button size="sm" variant="secondary">View</Button>
+                              </Link>
+                              <Button size="sm" variant="ghost" onClick={() => setExpandedId(expanded ? null : app.id)}>
+                                {expanded ? "Hide" : "Quick actions"}
+                              </Button>
+                            </div>
                           </td>
                         </tr>
-                      )}
-                    </Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+
+                        {expanded && (
+                          <tr key={`${app.id}-expanded`} className="border-b border-stone-200 bg-stone-50/80">
+                            <td colSpan={9} className="space-y-3 px-2 py-4">
+                              <StatusQuickForm
+                                applicationId={app.id}
+                                currentStatus={app.status}
+                                onDone={loadApplications}
+                              />
+                              <NextStepQuickForm application={app} onDone={loadApplications} />
+                              <NoteQuickForm applicationId={app.id} onDone={loadApplications} />
+                              <UploadQuickForm application={app} onDone={loadApplications} />
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </Card>
 

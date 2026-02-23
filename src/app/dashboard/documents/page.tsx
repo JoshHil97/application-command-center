@@ -152,7 +152,7 @@ export default function DocumentsPage() {
 
         <Card className="xl:col-span-2">
           <div className="mb-4 flex flex-wrap items-end gap-3">
-            <div className="w-48">
+            <div className="w-full sm:w-48">
               <Label>Filter by category</Label>
               <Select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
                 <option value="">All</option>
@@ -162,7 +162,7 @@ export default function DocumentsPage() {
               </Select>
             </div>
 
-            <div className="w-64">
+            <div className="w-full sm:w-64">
               <Label>Filter by application</Label>
               <Select value={applicationFilter} onChange={(event) => setApplicationFilter(event.target.value)}>
                 <option value="">All</option>
