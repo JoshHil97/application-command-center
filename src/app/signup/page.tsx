@@ -8,6 +8,26 @@ import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label } from "@/components/ui/field";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
+function normaliseAuthError(message: string) {
+  if (!/failed to fetch/i.test(message)) return message;
+
+  const configuredUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const host = (() => {
+    if (!configuredUrl) return "missing NEXT_PUBLIC_SUPABASE_URL";
+    try {
+      return new URL(configuredUrl).host;
+    } catch {
+      return configuredUrl;
+    }
+  })();
+
+  if (/localhost|127\.0\.0\.1/i.test(configuredUrl)) {
+    return `Cannot reach Supabase (${host}). This looks like a local URL. In Vercel, set NEXT_PUBLIC_SUPABASE_URL to https://<project-ref>.supabase.co and redeploy.`;
+  }
+
+  return `Cannot reach Supabase (${host}). Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel, then redeploy.`;
+}
+
 export default function SignupPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -28,25 +48,31 @@ export default function SignupPage() {
     setLoading(true);
     setError("");
 
-    const supabase = createSupabaseBrowserClient();
-    const { error: signUpError } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: {
-        data: {
-          full_name: fullName.trim(),
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: {
+            full_name: fullName.trim(),
+          },
         },
-      },
-    });
+      });
 
-    setLoading(false);
+      setLoading(false);
 
-    if (signUpError) {
-      setError(signUpError.message);
-      return;
+      if (signUpError) {
+        setError(normaliseAuthError(signUpError.message));
+        return;
+      }
+
+      router.replace("/dashboard");
+    } catch (err) {
+      setLoading(false);
+      const rawMessage = err instanceof Error ? err.message : "Failed to fetch";
+      setError(normaliseAuthError(rawMessage));
     }
-
-    router.replace("/dashboard");
   }
 
   return (

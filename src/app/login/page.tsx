@@ -13,6 +13,26 @@ function getRedirectFromUrl() {
   return new URLSearchParams(window.location.search).get("redirect") ?? "/dashboard";
 }
 
+function normaliseAuthError(message: string) {
+  if (!/failed to fetch/i.test(message)) return message;
+
+  const configuredUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const host = (() => {
+    if (!configuredUrl) return "missing NEXT_PUBLIC_SUPABASE_URL";
+    try {
+      return new URL(configuredUrl).host;
+    } catch {
+      return configuredUrl;
+    }
+  })();
+
+  if (/localhost|127\.0\.0\.1/i.test(configuredUrl)) {
+    return `Cannot reach Supabase (${host}). This looks like a local URL. In Vercel, set NEXT_PUBLIC_SUPABASE_URL to https://<project-ref>.supabase.co and redeploy.`;
+  }
+
+  return `Cannot reach Supabase (${host}). Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel, then redeploy.`;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -33,20 +53,26 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const supabase = createSupabaseBrowserClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
-    setLoading(false);
+      setLoading(false);
 
-    if (signInError) {
-      setError(signInError.message);
-      return;
+      if (signInError) {
+        setError(normaliseAuthError(signInError.message));
+        return;
+      }
+
+      router.replace(redirectPath);
+    } catch (err) {
+      setLoading(false);
+      const rawMessage = err instanceof Error ? err.message : "Failed to fetch";
+      setError(normaliseAuthError(rawMessage));
     }
-
-    router.replace(redirectPath);
   }
 
   return (
